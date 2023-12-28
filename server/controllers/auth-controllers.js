@@ -6,7 +6,7 @@ const home = async (req, res) => {
     res.status(200).send("Welcome To Our Website Codewithkhan");
   } catch (error) {
     console.error(error);
-    res.status(500).json("Internal Server Error");
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -17,21 +17,24 @@ const register = async (req, res) => {
     const userExist = await User.findOne({ email });
 
     if (userExist) {
-      return res.status(400).json({ msg: "Email already exists" });
+      return res.status(400).json({ error: "Email already exists" });
     }
 
-    const saltRound = 10;
-    const hash_password = await bcrypt.hash(password, saltRound);
+    const saltRounds = 10;
+    const hashPassword = await bcrypt.hash(password, saltRounds);
+
     const userCreated = await User.create({
       username,
       email,
       phone,
-      password: hash_password,
+      password: hashPassword,
     });
+
+    const token = await userCreated.generateToken();
 
     res.status(201).json({
       msg: "Registration successful",
-      token: await userCreated.generateToken(),
+      token,
       userId: userCreated._id.toString(),
     });
   } catch (error) {
@@ -46,19 +49,20 @@ const login = async (req, res) => {
     const userExist = await User.findOne({ email });
 
     if (!userExist) {
-      return res.status(400).json({ msg: "User does not exist!" });
+      return res.status(400).json({ error: "User does not exist!" });
     }
 
     const isPasswordValid = await userExist.comparePassword(password);
 
     if (isPasswordValid) {
+      const token = await userExist.generateToken();
       res.status(200).json({
         msg: "Login successful",
-        token: await userExist.generateToken(),
+        token,
         userId: userExist._id.toString(),
       });
     } else {
-      res.status(401).json({ msg: "Invalid email or password" });
+      res.status(401).json({ error: "Invalid email or password" });
     }
   } catch (error) {
     console.error(error);
@@ -70,9 +74,9 @@ const user = async (req, res) => {
   try {
     const userData = req.user;
     console.log(userData);
-    return res.status(200).json({ userData });
+    res.status(200).json({ userData });
   } catch (error) {
-    console.error(`error from the user route ${error}`);
+    console.error(`Error from the user route: ${error}`);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

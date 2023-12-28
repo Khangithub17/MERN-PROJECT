@@ -1,10 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
 
 export const Login = () => {
   const [user, setUser] = useState({
-    username: "",
+    email: "", // Change "username" to "email"
     password: "",
   });
 
